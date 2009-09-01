@@ -16,7 +16,7 @@ function renderMultistringTable (containerId,arrayOfStrings) {
     idNum ++; strId = containerId + "_tbl_elem_" + idNum;
     r += "<tr id=\"" + strId + "\">" + 
     		"<td>" + s + "</td>" +
-    		"<td><img src=\"/media/utils/images/delete.png\" onclick=\"removeFromMultistringTable('" + containerId + "','" + s + "')\"></img></td>" +
+    		"<td><img src=\"/media/extrafields/images/delete.png\" onclick=\"removeFromMultistringTable('" + containerId + "','" + s + "')\"></img></td>" +
     	 "</tr>";
   }
   r += "</table>";

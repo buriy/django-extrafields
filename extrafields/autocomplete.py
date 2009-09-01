@@ -22,12 +22,12 @@ class ForeignKeySearchInput(forms.HiddenInput):
     """
     class Media:
         css = {
-            'all': ('utils/css/jquery.autocomplete.css',)
+            'all': ('extrafields/css/jquery.autocomplete.css',)
         }
         js = (
-            'utils/js/jquery.js',
-            'utils/js/jquery.autocomplete.js',
-            'utils/js/AutocompleteObjectLookups.js',
+            'extrafields/js/jquery.js',
+            'extrafields/js/jquery.autocomplete.js',
+            'extrafields/js/AutocompleteObjectLookups.js',
         )
 
     def label_for_value(self, value):
@@ -113,12 +113,12 @@ class ManyToManySearchInput(forms.MultipleHiddenInput):
     """
     class Media:
         css = {
-            'all': ('utils/css/jquery.autocomplete.css',)
+            'all': ('extrafields/css/jquery.autocomplete.css',)
         }
         js = (
-            'utils/js/jquery.js',
-            'utils/js/jquery.autocomplete.js',
-            'utils/js/AutocompleteObjectLookups.js ',
+            'extrafields/js/jquery.js',
+            'extrafields/js/jquery.autocomplete.js',
+            'extrafields/js/AutocompleteObjectLookups.js ',
         )
 
 

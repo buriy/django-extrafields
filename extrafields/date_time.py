@@ -14,10 +14,10 @@ def js(code):
 class DateInput(forms.TextInput):
     class Media:
         css = {
-            'screen': ('utils/css/datepicker.css',)
+            'screen': ('extrafields/css/datepicker.css',)
         }
-        js = ('utils/js/jquery-1.3.2.min.js', 
-              'utils/js/jquery-ui-1.7.2.custom.min.js')
+        js = ('extrafields/js/jquery-1.3.2.min.js', 
+              'extrafields/js/jquery-ui-1.7.2.custom.min.js')
 
     def __init__(self, options={'dateFormat': 'yy-mm-dd'}, attrs={}):
         self.options = JSONEncoder().encode(options)
