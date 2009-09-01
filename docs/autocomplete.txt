@@ -1,0 +1,28 @@
+Sample usage:
+
+models.py
+~~~~~~~~
+class Type (models.Model):
+        title = models.CharField()
+
+class Celebrity(models.Model):
+        name = models.CharField()
+
+class Film(models.Model):
+        type    = models.ForeignKey( Type )
+        director= models.ManyToManyField( Celebrity, related_name="director")
+        actor   = models.ManyToManyField( Celebrity, related_name="actor")
+
+in m2m field you need to specify related_name
+
+admin.py
+~~~~~~~~
+from apps.autocomplete.widgets import *
+
+class FilmAdmin(AutocompleteModelAdmin):
+        related_search_fields = { 
+                'type': ('title',),
+                'actor': ('^name',),
+                'director': ('^name',),
+        }
+admin.site.register( Film, FilmAdmin )

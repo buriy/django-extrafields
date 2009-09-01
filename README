@@ -1,1 +1,34 @@
-To use fields that need jquery, add folder media to your media dir as media/extrafields folder
+General
+==============
+Please feel free to suggest adding more fields.
+Please feel free to fork & add new fields.
+Django deserve more types of high-quality field and widgets for django!
+
+Common note:
+~~~~~~~~~~~~
+To use fields that need jquery, add folder media to
+your media dir as media/extrafields folder.
+
+Some more details on widgets below.
+
+Autocomplete & multicomplete for admin
+======================================
+
+See docs/autocomplete.txt
+On the web: http://code.google.com/p/django-autocomplete/
+
+
+Duration field
+==============
+Can be used to enter values like "3h 30min", they will be converted to Decimal(20,6).
+On the web: http://code.djangoproject.com/ticket/2443
+
+
+Tinymce widget:
+==============
+http://www.djangosnippets.org/snippets/1705/
+
+
+AdminImageWidget:
+==============
+http://www.djangosnippets.org/snippets/934/
