@@ -11,7 +11,7 @@ def js(code):
       $(document).ready(function() { """+code+""" });
     --></script>"""
 
-class DateInput(forms.TextInput):
+class DatePickerInput(forms.TextInput):
     class Media:
         css = {
             'screen': ('extrafields/css/datepicker.css',)
@@ -36,7 +36,7 @@ class DateInput(forms.TextInput):
         attrs['name'] = name
         id = attrs['id'] 
         
-        r = super(DateInput, self).render(name, value, attrs)
+        r = super(DatePickerInput, self).render(name, value, attrs)
         return r + self.render_image(id) + self.render_js(id)
 
 from django.forms.widgets import Select
