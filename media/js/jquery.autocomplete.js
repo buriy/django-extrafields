@@ -211,7 +211,9 @@ jQuery.autocomplete = function(input, options) {
 			$input.val($input.val() + sValue.substring(prev.length));
 			// select the portion of the value not typed by the user (so the next character will erase)
 			createSelection(prev.length, sValue.length);
-		}
+    // }else if(!$input.val()){
+    //   selectItem(null);
+	  }
 	};
 
 	function showResults() {
@@ -238,9 +240,9 @@ jQuery.autocomplete = function(input, options) {
 		if ($results.is(":visible")) {
 			$results.hide();
 		}
-		if (options.mustMatch) {
+		if (options.emptyAllowed) {
 			var v = $input.val();
-			if (v != input.lastSelected) {
+			if (v == '' && v != input.lastSelected) {
 				selectItem(null);
 			}
 		}
@@ -473,6 +475,7 @@ jQuery.fn.autocomplete = function(url, options, data) {
 	options.matchContains = options.matchContains || 0;
 	options.cacheLength = options.cacheLength || 1;
 	options.mustMatch = options.mustMatch || 0;
+	options.emptyAllowed = options.emptyAllowed || 0;
 	options.extraParams = options.extraParams || {};
 	options.loadingClass = options.loadingClass || "ac_loading";
 	options.selectFirst = options.selectFirst || false;
