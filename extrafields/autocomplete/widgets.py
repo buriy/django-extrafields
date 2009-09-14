@@ -20,7 +20,8 @@ class ForeignKeySearchInput(forms.HiddenInput):
         )
 
     def label_for_value(self, value):
-        key = self.to_field_name
+        key = self.to_field_name or 'pk'
+        rend = self.renderer_name or '__unicode__'
         instance = self.queryset.get(**{key: value})
         f = getattr(instance, self.renderer_name)
         if callable(f):
@@ -32,29 +33,60 @@ class ForeignKeySearchInput(forms.HiddenInput):
             self.to_field_name = rel.get_related_field().name
             self.queryset = rel.to._default_manager
     
-    def __init__(self, search_fields=None, search_path=None, rel=None, queryset=None, 
+    def set_search(self, search):
+        if search is not None:
+            self.to_field_name = search.extras.get('to_field_name')
+            self.renderer_name = search.extras.get('renderer_name')
+            self.search_fields = search.extras.get('search_fields')
+            self.queryset = search.extras.get('queryset')
+            self.search = search
+    
+    def __init__(self, search_fields=None, search=None, search_path=None, rel=None, queryset=None, 
                  renderer_name=None, to_field_name=None, required=True, attrs=None):
         super(ForeignKeySearchInput, self).__init__(attrs)
+        self.set_search(search)
         self.search_path = search_path
         self.search_fields = search_fields
         self.queryset = queryset
-        self.to_field_name = to_field_name or 'pk'
-        self.renderer_name = renderer_name or ''
+        self.to_field_name = to_field_name
+        self.renderer_name = renderer_name
         self.required = bool(required)
         self.set_rel(rel)
 
     def render(self, name, value, attrs=None):
-        for field in ['search_fields', 'queryset', 'search_path']:
-            if getattr(self, field) is None:
-                raise Exception("Field %s shouldn't be None" % field)
+        if self.search is None:
+            for field in ['search_fields', 'queryset', 'search_path']:
+                if getattr(self, field) is None:
+                    raise Exception("Field %s shouldn't be None" % field)
+
         if attrs is None:
             attrs = {}
+
         rendered = super(ForeignKeySearchInput, self).render(name, value, attrs)
+        
         if value in forms.fields.EMPTY_VALUES:
             label = u''
         else:
             label = self.label_for_value(value)
-        opts = self.queryset.model._meta
+        
+        extras = {}
+        
+        if not self.search:
+            search_path = self.search_path
+            opts = self.queryset.model._meta
+            extras = {
+                'search_fields': ','.join(self.search_fields),
+                'search_path': self.search_path,
+                'model_name': opts.module_name,
+                'app_label': opts.app_label,
+                'to_field_name': self.to_field_name or '',
+                'renderer_name': self.renderer_name or '',
+            }
+        else:
+            search_path = self.search.get_link()
+            extras = self.search.render_extras()
+        
+        search_extras = '\n        '.join(["%s:'%s'" % (k,v) for k,v in extras.iteritems()])
             
         return rendered + mark_safe(u'''
 <input type="text" id="lookup_%(name)s" value="%(label)s" size="40"/>
@@ -81,11 +113,7 @@ function selectItem_%(name)s(li) {
 // --- Autocomplete ---
 $("#lookup_%(name)s").autocomplete('%(search_path)s', {
     extraParams: {
-        search_fields: '%(search_fields)s',
-        app_label: '%(app_label)s',
-        model_name: '%(model_name)s',
-        to_field_name: '%(to_field_name)s',
-        renderer_name: '%(renderer_name)s',
+        %(extras)s
     },
     delay:10,
     minChars:0,
@@ -104,14 +132,10 @@ $("#lookup_%(name)s").autocomplete('%(search_path)s', {
 </script>
 
         ''') % {
-            'search_fields': ','.join(self.search_fields),
-            'search_path': self.search_path,
             'MEDIA_URL': settings.MEDIA_URL,
-            'model_name': opts.module_name,
-            'app_label': opts.app_label,
-            'to_field_name': self.to_field_name or '',
-            'renderer_name': self.renderer_name or '',
             'empty_allowed': self.required and 'false' or 'true',
+            'search_path': search_path,
+            'extras': search_extras,
             'label': label,
             'name': name,
             'value': value,
@@ -138,9 +162,6 @@ class ManyToManySearchInput(forms.MultipleHiddenInput):
         if rel is not None:
             self.to_field_name = rel.get_related_field().name
             self.queryset = rel.to._default_manager
-    
-    def get_model(self):
-        return self.queryset.model
     
     def __init__(self, search_fields=None, search_path=None, rel=None, queryset=None, to_field_name=None, attrs=None):
         super(ManyToManySearchInput, self).__init__(attrs)

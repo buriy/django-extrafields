@@ -1,7 +1,7 @@
 from django.conf.urls.defaults import patterns
 from django.conf.urls.defaults import url
-from views import search
+from views import complete
 
 urlpatterns = patterns('',
-    url(r'^$', search, {}, 'extrafields_autocomplete'),
+    url(r'^$', complete, {}, 'extrafields_autocomplete'),
 )

@@ -7,7 +7,7 @@ from django.utils.encoding import force_unicode
 from django.utils.html import escape
 from django.utils.safestring import mark_safe
 from django.utils.translation import ugettext as _
-from views import search
+from views import complete
 from widgets import ForeignKeySearchInput, ManyToManySearchInput
 import settings
 
@@ -15,19 +15,19 @@ import settings
 class AutocompleteModelAdmin(admin.ModelAdmin):
     def get_urls(self):
         base = super(AutocompleteModelAdmin, self).get_urls()
-        return patterns('', ('search/$', self.search)) + base 
+        return patterns('', ('complete/$', self.complete)) + base 
 
     def urls(self):
         return self.get_urls()
     urls = property(urls)
     
-    search = search
+    complete = complete
 
     def __call__(self, request, url):
         if url is None:
             pass
-        elif url == 'search':
-            return self.search(request)
+        elif url == 'complete':
+            return self.complete(request)
         return super(AutocompleteModelAdmin, self).__call__(request, url)
 
     def formfield_for_dbfield(self, db_field, request=None, **kwargs):

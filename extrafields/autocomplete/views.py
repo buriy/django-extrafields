@@ -13,9 +13,9 @@ def construct_search(field_name):
     else:
         return "%s__icontains" % field_name
 
-def filter_search(model, search_fields, query):
+def filter_search(queryset, search_fields, query):
     q = None
-    for field_name in search_fields.split(','):
+    for field_name in search_fields:
         name = construct_search(field_name)
 
         if q:
@@ -23,7 +23,7 @@ def filter_search(model, search_fields, query):
         else:
             q = models.Q( **{str(name):query} )
 
-    qs = model.objects.filter( q )
+    qs = queryset.filter( q )
     return qs
 
 def get_and_apply(instance, field):
@@ -32,38 +32,70 @@ def get_and_apply(instance, field):
         return f()
     return f
 
-def search(request, **filters):
+def complete_query(query, queryset, search_fields, to_field_name=None, renderer_name=None, limit=None):
+    
+    #       Searches in the fields of the given related model and returns the 
+    #       result as a simple string to be used by the jQuery Autocomplete plugin
+    
+    if to_field_name is None:
+        to_field_name = 'pk'
+
+    if renderer_name is None:
+        renderer_name = '__unicode__'
+
+    #print '-----------------------'
+    #print search_fields, app_label, model_name, query
+    
+    try:
+        limit = int(limit)
+    except ValueError:
+        return HttpResponseBadRequest() 
+
+    if not search_fields:
+        return HttpResponseBadRequest("Bad search_fields")
+    if queryset is None:
+        return HttpResponseBadRequest("Bad queryset")
+    if query is None:
+        return HttpResponseBadRequest("Bad query")
+
+    qs = filter_search(queryset, search_fields, query).order_by(to_field_name)
+    
+    #filter only unique choices
+    choices = []
+    choicesset = set()
+    for f in qs[:limit]:
+        name = get_and_apply(f, renderer_name).replace('|','-')
+        key  = get_and_apply(f, to_field_name)
+        result = u'%s|%s\n' % (name, key)
+        if not result in choicesset:
+            choices.append(result)
+            choicesset.add(result)
+    data = ''.join(choices)
+    return HttpResponse(data, mimetype='text/plain')
+
+
+def complete(request, queryset=None, search_fields=None, to_field_name=None, renderer_name=None):
     
     #       Searches in the fields of the given related model and returns the 
     #       result as a simple string to be used by the jQuery Autocomplete plugin
     
     query = request.GET.get('q', '')
 
-    app_label = request.GET.get('app_label', None)
-    model_name = request.GET.get('model_name', None)
-    search_fields = request.GET.get('search_fields', None)
-    to_field_name = request.GET.get('to_field_name', None) or 'pk'
-    renderer_name = request.GET.get('renderer_name', None) or '__unicode__'
+    if queryset is None:
+        app_label = request.GET.get('app_label', None)
+        model_name = request.GET.get('model_name', None)
+        model = models.get_model(app_label, model_name)
+        queryset = model.objects
+        
+    if search_fields is None:
+        search_fields = request.GET.get('search_fields', '').split(',')
+        
+    if to_field_name is None:
+        to_field_name = request.GET.get('to_field_name', None)
 
-    #print '-----------------------'
-    #print search_fields, app_label, model_name, query
-    
-    limit = request.GET.get('limit', 10000)
-    try:
-        limit = int(limit)
-    except ValueError:
-        return HttpResponseBadRequest() 
+    if renderer_name is None:
+        renderer_name = request.GET.get('renderer_name', None)
 
-    if not search_fields or not app_label or not model_name or query is None:
-        return HttpResponseBadRequest()
+    limit = request.GET.get('limit', 100)
 
-    model = models.get_model(app_label, model_name)
-    qs = filter_search(model, search_fields, query).filter(**filters).order_by(to_field_name)
-    
-    choices = []
-    for f in qs[:limit]:
-        name = get_and_apply(f, renderer_name)
-        key  = get_and_apply(f, to_field_name)
-        choices.append(u'%s|%s\n' % (name, key))
-    data = ''.join(choices)
-    return HttpResponse(data, mimetype='text/plain')
+    return complete_query(query, queryset, search_fields, to_field_name, renderer_name, limit=limit)
