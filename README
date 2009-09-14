@@ -14,15 +14,13 @@ Some more details on widgets below.
 Autocomplete & multicomplete for admin
 ======================================
 
-See docs/autocomplete.txt
-On the web: http://code.google.com/p/django-autocomplete/
-
+Based on wonderful http://code.google.com/p/django-autocomplete/
+See docs/autocomplete.txt and examples/django-filters-autocomplete.py
 
 Duration field
 ==============
+Based on brilliant http://code.djangoproject.com/ticket/2443
 Can be used to enter values like "3h 30min", they will be converted to Decimal(20,6).
-On the web: http://code.djangoproject.com/ticket/2443
-
 
 Tinymce widget:
 ==============
