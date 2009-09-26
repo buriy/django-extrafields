@@ -67,7 +67,13 @@ class ForeignKeySearchInput(forms.HiddenInput):
         if value in forms.fields.EMPTY_VALUES:
             label = u''
         else:
-            label = self.label_for_value(value)
+            try:
+                label = self.label_for_value(value)
+            except Exception, e:
+                if not self.required:
+                    label = value
+                else:
+                    raise
         
         extras = {}
         
@@ -117,7 +123,7 @@ $("#lookup_%(name)s").autocomplete('%(search_path)s', {
     },
     delay:10,
     minChars:0,
-    matchSubset:1,
+    matchSubset:0,
     emptyAllowed:%(empty_allowed)s,
     autoFill:false,
     matchContains:1,
