@@ -230,6 +230,12 @@ jQuery.autocomplete = function(input, options) {
 	};
 
 	function hideResults() {
+		if (options.emptyAllowed) {
+			var v = $input.val();
+			if (v == '' && v != input.lastSelected) {
+				selectItem(null);
+			}
+		}
 		if (timeout) clearTimeout(timeout);
 		timeout = setTimeout(hideResultsNow, 200);
 	};
@@ -239,12 +245,6 @@ jQuery.autocomplete = function(input, options) {
 		$input.removeClass(options.loadingClass);
 		if ($results.is(":visible")) {
 			$results.hide();
-		}
-		if (options.emptyAllowed) {
-			var v = $input.val();
-			if (v == '' && v != input.lastSelected) {
-				selectItem(null);
-			}
 		}
 	};
 
