@@ -4,23 +4,29 @@ Please feel free to suggest adding more fields.
 Please feel free to fork & add new fields.
 Django deserve more types of high-quality field and widgets for django!
 
-Common note:
-~~~~~~~~~~~~
-To use fields that need jquery, add folder media to
-your media dir as media/extrafields folder.
 
+Common notes:
+~~~~~~~~~~~~
+To use fields that need jquery, add folder "media" into
+your "media" folder as "media/extrafields".
 Some more details on widgets below.
+
+Dynamic inlines for admin
+======================================
+Just a http://www.djangosnippets.org/snippets/1489/
+
 
 Autocomplete & multicomplete for admin
 ======================================
-
 Based on wonderful http://code.google.com/p/django-autocomplete/
 See docs/autocomplete.txt and examples/django-filters-autocomplete.py
+
 
 Duration field
 ==============
 Based on brilliant http://code.djangoproject.com/ticket/2443
 Can be used to enter values like "3h 30min", they will be converted to Decimal(20,6).
+
 
 Tinymce widget:
 ==============
