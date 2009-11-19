@@ -180,8 +180,8 @@ class ManyToManySearchInput(forms.MultipleHiddenInput):
 
     def render(self, name, value, attrs=None):
         for field in ['search_fields', 'queryset', 'search_path', 'to_field_name']:
-            value = getattr(self, field)
-            if value is None:
+            rvalue = getattr(self, field)
+            if rvalue is None:
                 raise Exception("Field %s shouldn't be None" % field)
         
         if attrs is None:

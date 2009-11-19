@@ -96,6 +96,6 @@ def complete(request, queryset=None, search_fields=None, to_field_name=None, ren
     if renderer_name is None:
         renderer_name = request.GET.get('renderer_name', None)
 
-    limit = request.GET.get('limit', 10000)
+    limit = request.GET.get('limit', 100)
 
     return complete_query(query, queryset, search_fields, to_field_name, renderer_name, limit=limit)

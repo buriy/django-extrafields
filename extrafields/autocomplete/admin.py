@@ -7,7 +7,7 @@ from django.utils.encoding import force_unicode
 from django.utils.html import escape
 from django.utils.safestring import mark_safe
 from django.utils.translation import ugettext as _
-from views import complete
+import views
 from widgets import ForeignKeySearchInput, ManyToManySearchInput
 import settings
 
@@ -17,11 +17,12 @@ class AutocompleteModelAdmin(admin.ModelAdmin):
         base = super(AutocompleteModelAdmin, self).get_urls()
         return patterns('', ('complete/$', self.complete)) + base 
 
+    @property
     def urls(self):
         return self.get_urls()
-    urls = property(urls)
     
-    complete = complete
+    def complete(self, request, **kw):
+        return views.complete(request, **kw)
 
     def __call__(self, request, url):
         if url is None:
@@ -34,7 +35,7 @@ class AutocompleteModelAdmin(admin.ModelAdmin):
         related_search_fields = getattr(self, 'related_search_fields', {})
         # For ForeignKey use a special Autocomplete widget.
         if isinstance(db_field, models.ForeignKey) and db_field.name in related_search_fields:
-            kwargs['widget'] = ForeignKeySearchInput(related_search_fields[db_field.name], rel=db_field.rel)
+            kwargs['widget'] = ForeignKeySearchInput(related_search_fields[db_field.name], rel=db_field.rel, search_path='../complete/')
 
             # extra HTML to the end of the rendered output.
             formfield = db_field.formfield(**kwargs)
@@ -48,7 +49,7 @@ class AutocompleteModelAdmin(admin.ModelAdmin):
                     
         # For ManyToManyField use a special Autocomplete widget.
         if isinstance(db_field, models.ManyToManyField)and db_field.name in related_search_fields:
-            kwargs['widget'] = ManyToManySearchInput(related_search_fields[db_field.name], rel=db_field.rel)
+            kwargs['widget'] = ManyToManySearchInput(related_search_fields[db_field.name], rel=db_field.rel, search_path='../complete/')
             db_field.help_text = ''
 
             # extra HTML to the end of the rendered output.
