@@ -7,14 +7,14 @@ from views import complete
 class CompletionSource(object):
     def __init__(self, **kwargs):
         self.extras = kwargs
-        self.complete = lambda request: complete(request, **self.extras)
+        #self.complete = lambda request: complete(request, **self.extras)
     
     def contribute_to_class(self, cls, name):
         cls.pages[name] = self
         setattr(cls, name, self)
 
     def get_link(self):
-        return reverse(self.complete)
+        return reverse(complete)
     
     def render_extras(self):
         return {}
@@ -29,6 +29,6 @@ class CompletionProvider(Static):
         return self.pages[page]()
     
     def get_urls(self):
-        urls = [url('^'+k+'/', v.complete) for k,v in self.pages.iteritems()]
-        print [v.complete for v in self.pages.values()] 
+        urls = [url('^'+k+'/$', complete, v.extras) for k,v in self.pages.iteritems()]
+#        print 'Urls:', ["%s -> %s" % (u.regex, unicode(u.default_args)) for u in urls] 
         return urls

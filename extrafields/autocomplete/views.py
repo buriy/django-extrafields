@@ -34,6 +34,7 @@ def get_and_apply(instance, field):
 
 def complete_query(query, queryset, search_fields, to_field_name=None, renderer_name=None, limit=None):
     
+    # print 'Complete query:', query, queryset, search_fields, to_field_name, renderer_name, limit
     #       Searches in the fields of the given related model and returns the 
     #       result as a simple string to be used by the jQuery Autocomplete plugin
     
@@ -78,6 +79,8 @@ def complete(request, queryset=None, search_fields=None, to_field_name=None, ren
     
     #       Searches in the fields of the given related model and returns the 
     #       result as a simple string to be used by the jQuery Autocomplete plugin
+    
+    # print 'Complete request:', queryset, search_fields, to_field_name, renderer_name
     
     query = request.GET.get('q', '')
 

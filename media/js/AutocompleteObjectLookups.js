@@ -17,11 +17,11 @@ function dismissAutocompletePopup(win, newId, newRepr) {
     newId = html_unescape(newId);
     newRepr = html_unescape(newRepr);
     var name = windowname_to_id(win.name);
-	var calback = 'addItem_' + name;
+	var callback = 'addItem_' + name;
 	// --- add result ---
 	try{
 	
-		eval(calback+'("'+newId+'","'+newRepr+'")');
+		eval(callback+'("'+newId+'","'+newRepr+'")');
 		win.close();
 	}catch(err){
 		//Handle errors here

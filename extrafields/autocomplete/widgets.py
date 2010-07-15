@@ -19,11 +19,9 @@ class ForeignKeySearchInput(forms.HiddenInput):
             'extrafields/js/AutocompleteObjectLookups.js',
         )
 
-    def label_for_value(self, value):
-        key = self.to_field_name or 'pk'
+    def label_for_instance(self, instance):
         rend = self.renderer_name or '__unicode__'
-        instance = self.queryset.get(**{key: value})
-        f = getattr(instance, self.renderer_name)
+        f = getattr(instance, rend)
         if callable(f):
             f = f()
         return truncate_words(f, 14)
@@ -41,7 +39,7 @@ class ForeignKeySearchInput(forms.HiddenInput):
             self.queryset = search.extras.get('queryset')
             self.search = search
     
-    def __init__(self, search_fields=None, search=None, search_path=None, rel=None, queryset=None, 
+    def __init__(self, search=None, search_fields=None, search_path=None, rel=None, queryset=None, 
                  renderer_name=None, to_field_name=None, required=True, attrs=None):
         super(ForeignKeySearchInput, self).__init__(attrs)
         self.set_search(search)
@@ -68,8 +66,10 @@ class ForeignKeySearchInput(forms.HiddenInput):
             label = u''
         else:
             try:
-                label = self.label_for_value(value)
-            except Exception, e:
+                key = self.to_field_name or 'pk'
+                instance = self.queryset.get(**{key: value})
+                label = self.label_for_instance(instance)
+            except Exception, _e:
                 if not self.required:
                     label = value
                 else:
@@ -92,9 +92,11 @@ class ForeignKeySearchInput(forms.HiddenInput):
             search_path = self.search.get_link()
             extras = self.search.render_extras()
         
-        search_extras = '\n        '.join(["%s:'%s'" % (k,v) for k,v in extras.iteritems()])
+        search_extras = '\n        '.join([
+               "%s:'%s'" % (k,v) for k,v in extras.iteritems()])
             
         return rendered + mark_safe(u'''
+jQuery(function(){
 <input type="text" id="lookup_%(name)s" value="%(label)s" size="40"/>
 <script type="text/javascript">
 
@@ -133,7 +135,8 @@ $("#lookup_%(name)s").autocomplete('%(search_path)s', {
     maxItemsToShow:20,
     onItemSelect:selectItem_%(name)s
 }); 
-// --- Autocomplete ---
+// --- /Autocomplete ---
+});
 });
 </script>
 
@@ -164,19 +167,44 @@ class ManyToManySearchInput(forms.MultipleHiddenInput):
         )
 
 
+    def set_search(self, search):
+        if search is not None:
+            self.to_field_name = search.extras.get('to_field_name')
+            self.renderer_name = search.extras.get('renderer_name')
+            self.search_fields = search.extras.get('search_fields')
+            self.queryset = search.extras.get('queryset')
+            self.search = search
+    
     def set_rel(self, rel):
         if rel is not None:
             self.to_field_name = rel.get_related_field().name
             self.queryset = rel.to._default_manager
     
-    def __init__(self, search_fields=None, search_path=None, rel=None, queryset=None, to_field_name=None, attrs=None):
+    def __init__(self, search_fields=None, search=None, search_path=None, rel=None, queryset=None,
+                 renderer_name=None, to_field_name=None, required=True, help_text="", attrs=None):
         super(ManyToManySearchInput, self).__init__(attrs)
-        self.search_path = search_path
-        self.search_fields = search_fields
-        self.queryset = queryset
-        self.to_field_name = to_field_name
-        self.help_text = ''
+        self.set_search(search)
+        if search_path:
+            self.search_path = search_path
+        if search_fields:
+            self.search_fields = search_fields
+        if queryset:
+            self.queryset = queryset
+        if to_field_name:
+            self.to_field_name = to_field_name
+        if renderer_name:
+            self.renderer_name = renderer_name
+        self.required = bool(required)
+        self.help_text = help_text
         self.set_rel(rel)
+
+    def label_for_instance(self, instance):
+        rend = self.renderer_name or '__unicode__'
+        f = getattr(instance, rend)
+        if callable(f):
+            f = f()
+        return truncate_words(f, 14)
+    
 
     def render(self, name, value, attrs=None):
         for field in ['search_fields', 'queryset', 'search_path', 'to_field_name']:
@@ -190,22 +218,47 @@ class ManyToManySearchInput(forms.MultipleHiddenInput):
         if value is None:
             value = []
         
-        label = ''
-        selected = ''
-        for id in value:
-            obj = self.queryset.get(id=id)
+        rlabel = ''
+        selected = []
+        for pk in value:
+            key = self.to_field_name or 'pk'
+            obj = self.queryset.get(**{key: pk})
+            rlabel = self.label_for_instance(obj)
 
-            selected = selected + mark_safe(u"""
-                <div class="to_delete deletelink" ><input type="hidden" name="%(name)s" value="%(value)s"/>%(label)s</div>""" 
-                )%{
-                    'label': obj.name,
+            selected.append(mark_safe(u'<div class="to_delete deletelink" >'
+                                      u'<input type="hidden" name="%(name)s" value="%(value)s"/>'
+                                      u'%(label)s'
+                                      u'</div>' 
+                ) % {
+                    'label': rlabel,
                     'name': name,
-                    'value': obj.id,
-        }
+                    'value': getattr(obj, key),
+                }
+            )
 
+        extras = {}
+        
+        if not self.search:
+            search_path = self.search_path
+            opts = self.queryset.model._meta
+            extras = {
+                'search_fields': ','.join(self.search_fields),
+                'search_path': self.search_path,
+                'model_name': opts.module_name,
+                'app_label': opts.app_label,
+                'to_field_name': self.to_field_name or '',
+                'renderer_name': self.renderer_name or '',
+            }
+        else:
+            search_path = self.search.get_link()
+            extras = self.search.render_extras()
+        
+        search_extras = '\n        '.join([
+               "%s: '%s'" % (k,v) for k,v in extras.iteritems()])
+            
         opts = self.queryset.model._meta
         return mark_safe(u'''
-<input type="text" id="lookup_%(name)s" value="" size="40"/>%(label)s
+<input type="text" id="lookup_%(name)s" value="" size="40"/>
 <div class="ac_chosen" style="padding-left:105px; width: 100%%">
 <font style="color:#999999;font-size:10px !important;">%(help_text)s</font>
 <div id="box_%(name)s" style="padding-left:20px;cursor:pointer;">
@@ -214,7 +267,7 @@ class ManyToManySearchInput(forms.MultipleHiddenInput):
 </div></div>
 
 <script type="text/javascript">
-
+jQuery(function(){
 
 function addItem_id_%(name)s(id,name) {
     // --- add element from popup ---
@@ -248,9 +301,7 @@ $(document).ready(function(){
     // --- Autocomplete ---
     $("#lookup_%(name)s").autocomplete('%(search_path)s', {
         extraParams: {
-            search_fields: '%(search_fields)s',
-            app_label: '%(app_label)s',
-            model_name: '%(model_name)s',
+            %(extras)s
         },
         delay:10,
         minChars:0,
@@ -266,16 +317,15 @@ $(document).ready(function(){
 // --- delete initial elements ---
     $(".to_delete").click(function () {$(this).remove();});
 });
+});
 </script>
 
         ''') % {
-            'search_fields': ','.join(self.search_fields),
-            'search_path': self.search_path,
-            'model_name': opts.module_name,
-            'app_label': opts.app_label,
-            'label': label,
+            'search_path': search_path,
+            'extras': search_extras,
+#            'label': label,
             'name': name,
             'value': value,
-            'selected':selected,
+            'selected':'\n'.join(selected),
             'help_text':self.help_text
         }

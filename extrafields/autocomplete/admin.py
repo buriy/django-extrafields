@@ -32,35 +32,38 @@ class AutocompleteModelAdmin(admin.ModelAdmin):
         return super(AutocompleteModelAdmin, self).__call__(request, url)
 
     def formfield_for_dbfield(self, db_field, request=None, **kwargs):
-        related_search_fields = getattr(self, 'related_search_fields', {})
-        # For ForeignKey use a special Autocomplete widget.
-        if isinstance(db_field, models.ForeignKey) and db_field.name in related_search_fields:
-            kwargs['widget'] = ForeignKeySearchInput(related_search_fields[db_field.name], rel=db_field.rel, search_path='../complete/')
+        related_search = getattr(self, 'related_search', {})
 
-            # extra HTML to the end of the rendered output.
-            formfield = db_field.formfield(**kwargs)
-            # Don't wrap raw_id fields. Their add function is in the popup window.
-            if not db_field.name in self.raw_id_fields:
-                # formfield can be None if it came from a OneToOneField with
-                # parent_link=True
-                if formfield is not None:
-                    formfield.widget = AutocompleteWidgetWrapper(formfield.widget, db_field.rel, self.admin_site)
-            return formfield
-                    
-        # For ManyToManyField use a special Autocomplete widget.
-        if isinstance(db_field, models.ManyToManyField)and db_field.name in related_search_fields:
-            kwargs['widget'] = ManyToManySearchInput(related_search_fields[db_field.name], rel=db_field.rel, search_path='../complete/')
-            db_field.help_text = ''
-
-            # extra HTML to the end of the rendered output.
-            formfield = db_field.formfield(**kwargs)
-            # Don't wrap raw_id fields. Their add function is in the popup window.
-            if not db_field.name in self.raw_id_fields:
-                # formfield can be None if it came from a OneToOneField with
-                # parent_link=True
-                if formfield is not None:
-                    formfield.widget = AutocompleteWidgetWrapper(formfield.widget, db_field.rel, self.admin_site)
-            return formfield
+        if db_field.name in related_search:
+            search = related_search[db_field.name]
+            # For ForeignKey use a special Autocomplete widget.
+            if isinstance(db_field, models.ForeignKey):
+                kwargs['widget'] = ForeignKeySearchInput(search=search, rel=db_field.rel, search_path='../complete/', **kwargs)
+    
+                # extra HTML to the end of the rendered output.
+                formfield = db_field.formfield(**kwargs)
+                # Don't wrap raw_id fields. Their add function is in the popup window.
+                if not db_field.name in self.raw_id_fields:
+                    # formfield can be None if it came from a OneToOneField with
+                    # parent_link=True
+                    if formfield is not None:
+                        formfield.widget = AutocompleteWidgetWrapper(formfield.widget, db_field.rel, self.admin_site)
+                return formfield
+                        
+            # For ManyToManyField use a special Autocomplete widget.
+            if isinstance(db_field, models.ManyToManyField):
+                kwargs['widget'] = ManyToManySearchInput(search=search, rel=db_field.rel, search_path='../complete/', **kwargs)
+                db_field.help_text = ''
+    
+                # extra HTML to the end of the rendered output.
+                formfield = db_field.formfield(**kwargs)
+                # Don't wrap raw_id fields. Their add function is in the popup window.
+                if not db_field.name in self.raw_id_fields:
+                    # formfield can be None if it came from a OneToOneField with
+                    # parent_link=True
+                    if formfield is not None:
+                        formfield.widget = AutocompleteWidgetWrapper(formfield.widget, db_field.rel, self.admin_site)
+                return formfield
         
         return super(AutocompleteModelAdmin, self).formfield_for_dbfield(db_field, request=request, **kwargs)
     
@@ -81,9 +84,9 @@ class AutocompleteModelAdmin(admin.ModelAdmin):
             return HttpResponseRedirect(post_url_continue % pk_value)
         
         if request.POST.has_key("_popup"):
-            #htturn response to Autocomplete PopUp
-            if request.POST.has_key("_popup"):
-                return HttpResponse('<script type="text/javascript">opener.dismissAutocompletePopup(window, "%s", "%s");</script>' % (escape(pk_value), escape(obj)))
+            return HttpResponse('<script type="text/javascript">opener.dismissAutocompletePopup(window, "%s", "%s");</script>' %
+                # escape() calls force_unicode.
+                (escape(pk_value), escape(obj)))
                         
         elif request.POST.has_key("_addanother"):
             self.message_user(request, msg + ' ' + (_("You may add another %s below.") % force_unicode(opts.verbose_name)))

@@ -3,18 +3,18 @@ from django.conf import settings
 from django.utils.safestring import mark_safe
 
 class TinyMCEEditor(forms.Textarea):
-
     class Media:
         js = (
-            'js/jquery.js',
-            'js/tiny_mce/jquery.tinymce.js',
+            'extrafields/js/jquery.js',
+            'extrafields/tiny_mce/jquery.tinymce.js',
         )
 
     def render(self, name, value, attrs=None):
         rendered = super(TinyMCEEditor, self).render(name, value, attrs)
         return rendered + mark_safe(u"""<script type="text/javascript">
+        alert('running js at #id_%s');
     jQuery('#id_%s').tinymce({
-        script_url : '%sjs/tiny_mce/tiny_mce.js',
+        script_url : '%sextrafields/tiny_mce/tiny_mce.js',
         mode : "textareas",
         convert_urls : false,
         width:  585,
@@ -29,4 +29,4 @@ class TinyMCEEditor(forms.Textarea):
         theme_advanced_path_location : "bottom",
         extended_valid_elements : "a[name|href|target|title|onclick]"
     });
-</script>""" % (name, settings.MEDIA_URL))
+</script>""" % (name, name, settings.MEDIA_URL))
