@@ -96,47 +96,46 @@ class ForeignKeySearchInput(forms.HiddenInput):
                "%s:'%s'" % (k,v) for k,v in extras.iteritems()])
             
         return rendered + mark_safe(u'''
-jQuery(function(){
 <input type="text" id="lookup_%(name)s" value="%(label)s" size="40"/>
 <script type="text/javascript">
-
-function addItem_id_%(name)s(id, name) {
-    $("#id_%(name)s").val( id );
-    $("#lookup_%(name)s").val( name );
-}
-
-$(document).ready(function(){
-function liFormat_%(name)s (row, i, num) {
-    var result = row[0] ;
-    return result;
-}
-function selectItem_%(name)s(li) {
-    if( li == null ) var sValue = '';
-    if( !!li.extra ) var sValue = li.extra[0];
-    else var sValue = li.selectValue;
-    if(sValue == undefined) sValue='';
-    $("#id_%(name)s").val( sValue );
-}
-
-// --- Autocomplete ---
-$("#lookup_%(name)s").autocomplete('%(search_path)s', {
-    extraParams: {
-        %(extras)s
-    },
-    delay:10,
-    minChars:0,
-    matchSubset:0,
-    emptyAllowed:%(empty_allowed)s,
-    autoFill:false,
-    matchContains:1,
-    cacheLength:10,
-    selectFirst:false,
-    formatItem:liFormat_%(name)s,
-    maxItemsToShow:20,
-    onItemSelect:selectItem_%(name)s
-}); 
-// --- /Autocomplete ---
-});
+jQuery(function(){
+    function addItem_id_%(name)s(id, name) {
+        $("#id_%(name)s").val( id );
+        $("#lookup_%(name)s").val( name );
+    }
+    
+    $(document).ready(function(){
+        function liFormat_%(name)s (row, i, num) {
+            var result = row[0] ;
+            return result;
+        }
+        function selectItem_%(name)s(li) {
+            if( li == null ) var sValue = '';
+            if( !!li.extra ) var sValue = li.extra[0];
+            else var sValue = li.selectValue;
+            if(sValue == undefined) sValue='';
+            $("#id_%(name)s").val( sValue );
+        }
+        
+        // --- Autocomplete ---
+        $("#lookup_%(name)s").autocomplete('%(search_path)s', {
+            extraParams: {
+                %(extras)s
+            },
+            delay:10,
+            minChars:0,
+            matchSubset:0,
+            emptyAllowed:%(empty_allowed)s,
+            autoFill:false,
+            matchContains:1,
+            cacheLength:10,
+            selectFirst:false,
+            formatItem:liFormat_%(name)s,
+            maxItemsToShow:20,
+            onItemSelect:selectItem_%(name)s
+        }); 
+        // --- /Autocomplete ---
+    });
 });
 </script>
 
