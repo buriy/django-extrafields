@@ -8,7 +8,7 @@ class AutocompleteCharField(forms.CharField):
     def __init__(self, search_fields=None, queryset=None, search_path=None, search=None,
                  to_field_name=None, renderer_name=None, required=True, *args, **kwargs):
 
-        base = super(ForeignKeyFormField, self)
+        base = super(AutocompleteCharField, self)
         base.__init__(self, required=required, *args, **kwargs)
         
         self.widget.set_search(search)
